@@ -7,11 +7,20 @@
             "metadata": {
                 "description": "Storage Account Name"
             }
+        },
+        "publicIPAddressName": {
+            "type": "string"
+        },
+        "dnsNameforLBIP": {
+            "type": "string"
+        },
+        "vnetName": {
+            "type": "string"
         }
     },
     "variables": {
-        "storageAccountName": "dennisstorageaccount",
-        "availabilitySetName": "dennisavailabilityset"
+        "availabilitySetName": "dennisavailabilityset",
+        "subnetName": "dennissubnet"
     },
     "resources": [
         {
@@ -29,6 +38,39 @@
             "apiVersion": "2015-06-15",
             "location": "[resourceGroup().location]",
             "properties": {}
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[parameters('publicIPAddressName')]",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[parameters('dnsNameforLBIP')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[parameters('vnetName')]",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('subnetName')]",
+                        "properties": {
+                            "addressPrefix": "10.0.0.0/24"
+                        }
+                    }
+                ]
+            }
         }
     ],
     "outputs": {  }
