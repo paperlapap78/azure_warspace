@@ -36,13 +36,23 @@
             "metadata": {
                 "description": "Load Balancer name"
             }
+        },
+        "nicNamePrefix": {
+            "type": "string",
+            "defaultValue": "nic",
+            "metadata": {
+                "description": "Network Interface name prefix"
+            }
         }
     },
     "variables": {
+        "numberOfInstances": 2,
         "availabilitySetName": "dennisavailabilityset",
         "addressPrefix": "10.0.0.0/16",
         "subnetName": "dennissubnet",
         "subnetPrefix": "10.0.0.0/24",
+        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+        "subnetRef": "[concat(variables('vnetID'), '/subnets/', variables('subnetName'))]",
         "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('publicIPAddressName'))]",
         "lbID": "[resourceId('Microsoft.Network/loadBalancers', parameters('lbName'))]",
         "frontEndIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/LoadBalancerFrontEnd')]",
@@ -180,7 +190,39 @@
                     }
                 ]
             }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat(parameters('nicNamePrefix'), copyindex())]",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "nicLoop",
+                "count": "[variables('numberOfInstances')]"
+            },
+            "Dependson": [
+                "[Concat('Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
+                "[concat('Microsoft.Network/loadBalancers/', parameters('lbName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            },
+                            "loadBalancerBackendAddressPools": [
+                                {
+                                    "id": "[concat(variables('lbID'), '/backendAddressPools/BackendPool1')]"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
         }
     ],
-    "outputs": {  }
+    "Outputs": {  }
 }
